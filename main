@@ -1,123 +1,77 @@
-import time
 import pandas as pd
 import numpy as np
 import calendar
+import time
 
 CITY_DATA = { 'chicago': 'chicago.csv',
               'new york city': 'new_york_city.csv',
-              'washington': 'washington.csv' }
+              'washington': 'washington.csv'}
 
-def get_filters():
-    """
-    Asks user to specify a city, month, and day to analyze.
-
-    Returns:
-        (str) city - name of the city to analyze
-        (str) month - name of the month to filter by, or "all" to apply no month filter
-        (str) day - name of the day of week to filter by, or "all" to apply no day filter
-    """
-    print('Hello! Let\'s explore some US bikeshare data!')
-    # get user input for city (chicago, new york city, washington). HINT: Use a while loop to handle invalid inputs
-    print("Which city would you like to view it's data? is it chicago or washington or new york city")
-    city = input().lower()
-    while city != 'chicago' and city != 'washington' and city != 'new york city':
-        print("please enter a valid city")
-        city = input().lower()
-
-    # get user input for month (all, january, february, ... , june)
-    print("enter the month number you wish to filter by eg: 1 for January, type 13 if you don't wish to filter by month")
-    month_int = int(input()) # none is 13
-    day = 8
-    while month_int >= 14 or month_int <= 0:
-        print("please enter a valid number")
-        month_int = int(input())
-
-    # get user input for day of week (all, monday, tuesday, ... sunday)
-    if month_int >= 13:
-        print("please enter the day's number you want to filter by where Monday is 1 and Sunday is 7 and none is 8")
-        day = int(input()) # none is 8
-        while day >= 13 or day <= 0:
-            print("please enter valid day")
-            day = int(input())
+months_in_year = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
+                      'November', 'December', 'all']
+days_in_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'all']
 
 
+def get_filters(): # works
+    start_time = time.time()
+    city = input("please enter city\n").lower()
+    while city != 'chicago' and city != 'new york city' and city != 'washington':
+        city = input("please enter correct city name\n").lower()
+    print("the city is {}".format(city))
+    print("this database only contains the first 6 months of the year\n")
+    month_int = int(input("Enter the month to filter by where 1 is january and 6 is June and 7 is all months\n"))
+    while month_int <= 0 or month_int >= 8:
+        month_int = int(input("please enter correct month\n"))
+    month = months_in_year[month_int-1]
+    print("the month is {}\n".format(month))
+    if month_int == 7:
+        day_int = int(input("enter day of the week to filter by where 1 is monday and 7 is sunday and none is 8\n"))
+        while day_int <= 0 or day_int >= 9:
+            day_int = int(input("please enter valid day\n"))
+        day_name = days_in_week[day_int - 1]
+    else:
+        day_int = 8
+        day_name = 'all'
+    print("the name of the day chosen is {}\n".format(day_name))
+    print("\nThis took %s seconds." % (time.time() - start_time))
     print('-'*40)
-    return city, month_int, day
+    return city, month_int, day_int
 
 
-CITY_DATA = { 'chicago': 'chicago.csv',
-              'new york city': 'new_york_city.csv',
-              'washington': 'washington.csv' }
-
-def load_data(city, month_int, day):
-    """
-    Loads data for the specified city and filters by month and day if applicable.
-
-    Args:
-        (str) city - name of the city to analyze
-        (str) month - name of the month to filter by, or "all" to apply no month filter
-        (str) day - name of the day of week to filter by, or "all" to apply no day filter
-    Returns:
-        df - Pandas DataFrame containing city data filtered by month and day
-    """
-
-    # load data file into a dataframe
+def load_data(city, month, day): # works
+    start_time = time.time()
     df = pd.read_csv(CITY_DATA[city])
-    print(df.head(8))
-    # convert the Start Time column to datetime
     df['Start Time'] = pd.to_datetime(df['Start Time'])
-
-    # extract month and day of week from Start Time to create new columns
-    df['month'] = df['Start Time'].dt.month
-    df['day_of_week'] = df['Start Time'].dt.day_name
-
-    # filter by month if applicable
-    if month_int != 13:
-        df = df[df['month'] == month_int]
-        print(df.head(8))
-    # filter by day of week if applicable
+    if month != 7:
+        df = df[df['Start Time'].dt.month == month]
     if day != 8:
-        # filter by day of week to create the new dataframe is not working
-        day_name = calendar.day_name[day-1]
-        df = df[df['day_of_week'] == day_name.title()]
-        print(df.head(8))
+        df = df[df['Start Time'].dt.weekday+1 == day]
+    print("\nThis took %s seconds." % (time.time() - start_time))
+    print('-'*40)
     return df
 
 
-def time_stats(df,month,day):
-    """Displays statistics on the most frequent times of travel."""
-
-    print('\nCalculating The Most Frequent Times of Travel...\n')
+def time_stats(df, month, day): # works
     start_time = time.time()
-    # convert the Start Time column to datetime
-    df['Start Time'] = pd.to_datetime(df['Start Time'])
-
-    # display the most common month is working
-    if month == 13:
+    if month == 7:
         df['month'] = df['Start Time'].dt.month
         popular_month = df['month'].mode()[0]
         print("Most Popular Month is: ", popular_month)
-    # display the most common day of week is not working
-    # if day == 8:
-    #     df['day'] = df['Start Time'].dt.day_name
-    #     popular_day = df['day'].mode()[0]
-    #     print("Most Popular day is: ", popular_day)
-
-    # display the most common start hour is working
-    # extract hour from the Start Time column to create an hour column
+    if day == 8:
+        # df['day'] = df['Start Time'].dt.isocalendar().day
+        df['day'] = df['Start Time'].dt.dayofweek
+        popular_day = df['day'].mode()[0]
+        print("Most Popular day is: ", days_in_week[popular_day])
     df['hour'] = df['Start Time'].dt.hour
     # find the most popular hour
     popular_hour = df['hour'].mode()[0]
 
     print('Most Popular Start Hour:', popular_hour)
-
     print("\nThis took %s seconds." % (time.time() - start_time))
     print('-'*40)
 
 
-def station_stats(df):
-    """Displays statistics on the most popular stations and trip. and it is DONE"""
-
+def station_stats(df): # works
     print('\nCalculating The Most Popular Stations and Trip...\n')
     start_time = time.time()
 
@@ -130,24 +84,19 @@ def station_stats(df):
     print("The most popular end station is: ", popular_end_station)
 
     # display most frequent combination of start station and end station trip
-    combo = (df['Start Station'] + ' To ' + df['End Station']).mode()[0]
+    combo = (df['Start Station'] + ' To ' + df['End Station'])
+    combo = combo.mode()[0]
     print("most common combination is {} ".format(combo))
     print("\nThis took %s seconds." % (time.time() - start_time))
     print('-'*40)
 
 
-def trip_duration_stats(df):
-    """Displays statistics on the total and average trip duration."""
-
-    print('\nCalculating Trip Duration...\n')
+def trip_duration_stats(df): # works
     start_time = time.time()
-
-    # display total travel time
-
-
-    # display mean travel time
-
-
+    total_travel_time = df['Trip Duration'].sum()
+    print("the total travelling time is: {} seconds\n".format(total_travel_time))
+    average_travel_time = df['Trip Duration'].mean()
+    print("the Average travel time is {} seconds\n".format(average_travel_time))
     print("\nThis took %s seconds." % (time.time() - start_time))
     print('-'*40)
 
@@ -178,11 +127,12 @@ def user_stats(df, city): # works
 
 def main():
     while True:
+
         city, month, day = get_filters()
         df = load_data(city, month, day)
-        time_stats(df,month,day)
+        time_stats(df, month, day)
         station_stats(df)
-        #       trip_duration_stats(df)
+        trip_duration_stats(df)
         user_stats(df, city)
 
         restart = input('\nWould you like to restart? Enter yes or no.\n')
